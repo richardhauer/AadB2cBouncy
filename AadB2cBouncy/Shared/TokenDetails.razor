@@ -1,0 +1,142 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+@using Microsoft.Authentication.WebAssembly.Msal;
+@using System.Security.Claims;
+
+@inject IAccessTokenProvider TokenProvider
+@inject MsalAuthenticationOptions Opts;
+@inject NavigationManager NavMgr;
+
+<AuthorizeView>
+    <Authorized>
+        <div class="card mb-2">
+            <div class="card-header">Issuer</div>
+            <div class="card-body">
+                <p>Issuer from the current token is <code>@GetIssuerClaim( context?.User?.Claims )</code></p>
+                <p>Authority from settings file is <code>@Opts.Authority</code></p>
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+<div class="card mb-2">
+    <div class="card-header">IAccessTokenProvider::TryGetToken()</div>
+    <div class="card-body">
+        @if ( GetOk != null )
+        {
+            <p>IAccessTokenProvider::TryGetToken() returned @GetOk.ToString()</p>
+        }
+
+        @if ( GetEx != null )
+        {
+            <p>IAccessTokenProvider::TryGetToken() threw a @GetEx.GetType().Name exception with message: @GetEx.Message</p>
+        }
+    </div>
+</div>
+
+
+@if ( CurrentTokenResult != null )
+{
+    <div class="card mb-2">
+        <div class="card-header">AccessTokenResult properties</div>
+        <div class="card-body">
+
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th scope="row">Status:</th>
+                    <td class="@GetStatusClass()">@CurrentTokenResult.Status</td>
+                </tr>
+                <tr>
+                    <th scope="row">InteractiveRequestUrl:</th>
+                    <td>@CurrentTokenResult.InteractiveRequestUrl</td>
+                </tr>
+                @if ( CurrentTokenResult.InteractionOptions != null )
+                {
+                    <tr>
+                        <th scope="row">InteractionOptions.Interaction:</th>
+                        <td>@CurrentTokenResult.InteractionOptions.Interaction</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">InteractionOptions.ReturnUrl:</th>
+                        <td>@CurrentTokenResult.InteractionOptions.ReturnUrl</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">InteractionOptions.Scopes:</th>
+                        <td>@String.Join( " ", CurrentTokenResult.InteractionOptions.Scopes ?? Enumerable.Empty<string>() )</td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </div>
+
+    @if ( CurrentTokenResult.Status == AccessTokenResultStatus.RequiresRedirect )
+    {
+        <div class="alert alert-danger mb-2" role="alert">
+            The current token cannot be used with downstream APIs - a redirect to the issuing authority is required.<br />Click below to perform the redirect - this would normally be done automatically.
+        </div>
+        <button type="button" class="btn btn-primary" @onclick="DoRedirectIfNeeded">Click here to do redirect as required by IAccessTokenProvider</button>
+    }
+    else if ( CurrentTokenResult.Status == AccessTokenResultStatus.Success )
+    {
+        <div class="alert alert-success mb-2" role="alert">
+            The current token is valid and can be used with downstream APIs.
+        </div>
+    }
+
+}
+
+@if (CurrentToken != null)
+{
+    <div class="card mb-2">
+        <div class="card-header">AccessToken properties</div>
+        <div class="card-body">
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th scope="row">Value:</th>
+                    <td>@CurrentToken.Value.Substring(1, 20)<text>...</text></td>
+                </tr>
+                <tr>
+                    <th scope="row">Expires:</th>
+                    <td>@CurrentToken.Expires.ToString()</td>
+                </tr>
+                <tr>
+                    <th scope="row">GrantedScopes:</th>
+                    <td>@String.Join( " ", CurrentToken.GrantedScopes ?? Enumerable.Empty<string>() )</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private AccessToken? CurrentToken;
+    private AccessTokenResult? CurrentTokenResult;
+    private bool? GetOk;
+    private Exception? GetEx;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        try
+        {
+            CurrentTokenResult = await TokenProvider.RequestAccessToken();
+            GetOk = CurrentTokenResult.TryGetToken( out CurrentToken );
+        }
+        catch ( Exception ex )
+        {
+            GetEx = ex;
+        }
+    }
+
+    private void DoRedirectIfNeeded()
+    {
+        if ( CurrentTokenResult?.Status == AccessTokenResultStatus.RequiresRedirect )
+            NavMgr.NavigateTo( CurrentTokenResult.InteractiveRequestUrl );
+    }
+
+    private string GetIssuerClaim(IEnumerable<Claim>? claims)
+        => ( claims ?? Enumerable.Empty<Claim>() ).FirstOrDefault(c => c.Type != null && c.Type.Equals("iss", StringComparison.OrdinalIgnoreCase))?.Value ?? "unknown";
+
+    private string GetStatusClass()
+        => CurrentTokenResult.Status == AccessTokenResultStatus.RequiresRedirect ? "table-danger" : "";
+}

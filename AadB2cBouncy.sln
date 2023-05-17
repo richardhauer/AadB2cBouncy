@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33627.172
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AadB2cBouncy", "AadB2cBouncy\AadB2cBouncy.csproj", "{9B981B00-4492-49BE-B0E3-707A31A03BCA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9B981B00-4492-49BE-B0E3-707A31A03BCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B981B00-4492-49BE-B0E3-707A31A03BCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B981B00-4492-49BE-B0E3-707A31A03BCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B981B00-4492-49BE-B0E3-707A31A03BCA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C3549C66-091D-4DF3-AFAF-1C66DF1686E5}
+	EndGlobalSection
+EndGlobal
